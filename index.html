@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SCIE MAP Generator</title>
+  <link rel="stylesheet" href="styles.css" />
+  <script defer src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <script defer src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script defer src="app.js"></script>
+</head>
+<body>
+  <header class="hero">
+    <div class="wrap">
+      <p class="eyebrow">SCIE · Medidas de Autoproteção</p>
+      <h1>Gerador de análise de risco e MAP</h1>
+      <p class="lead">
+        Ferramenta base para análise do caso, classificação da categoria de risco e geração de dossiê
+        de medidas de autoproteção segundo a Lei n.º 123/2019, a Portaria n.º 135/2020 e o despacho
+        sobre densidade de carga de incêndio modificada.
+      </p>
+      <div class="hero-actions">
+        <a href="#formulario" class="btn primary">Começar análise</a>
+        <button type="button" class="btn" id="loadDemo">Carregar exemplo</button>
+      </div>
+      <div class="note legal-note">
+        <strong>Importante:</strong> esta aplicação gera um dossiê técnico-base e não substitui a validação,
+        subscrição e submissão por técnico legalmente habilitado quando exigível.
+      </div>
+    </div>
+  </header>
+
+  <main class="wrap layout">
+    <section class="panel" id="formulario">
+      <div class="panel-head">
+        <h2>Dados do caso</h2>
+        <p>Preencha os fatores de risco principais. O motor calcula automaticamente a categoria da utilização-tipo.</p>
+      </div>
+
+      <form id="caseForm" class="grid">
+        <label>
+          Nome do projeto
+          <input type="text" name="projectName" placeholder="Ex.: Armazém Central Barros" />
+        </label>
+
+        <label>
+          Entidade exploradora
+          <input type="text" name="entity" placeholder="Ex.: Barros Auto, Lda." />
+        </label>
+
+        <label>
+          Responsável de segurança (RS)
+          <input type="text" name="rs" placeholder="Nome do responsável" />
+        </label>
+
+        <label>
+          Utilização-tipo
+          <select name="ut" id="utSelect" required>
+            <option value="I">I · Habitacionais</option>
+            <option value="II">II · Estacionamentos</option>
+            <option value="III">III · Administrativos</option>
+            <option value="IV">IV · Escolares</option>
+            <option value="V">V · Hospitalares e lares de idosos</option>
+            <option value="VI">VI · Espetáculos e reuniões públicas</option>
+            <option value="VII">VII · Hoteleiros e restauração</option>
+            <option value="VIII">VIII · Comerciais e gares de transportes</option>
+            <option value="IX">IX · Desportivos e de lazer</option>
+            <option value="X">X · Museus e galerias de arte</option>
+            <option value="XI">XI · Bibliotecas e arquivos</option>
+            <option value="XII">XII · Industriais, oficinas e armazéns</option>
+          </select>
+        </label>
+
+        <label>
+          Edifício integrado ou recinto ao ar livre
+          <select name="spaceType" id="spaceType">
+            <option value="building">Integrada em edifício / recinto coberto</option>
+            <option value="outdoor">Ao ar livre</option>
+          </select>
+        </label>
+
+        <label>
+          Altura da utilização-tipo (m)
+          <input type="number" step="0.01" min="0" name="height" value="0" />
+        </label>
+
+        <label>
+          Pisos abaixo do plano de referência
+          <input type="number" min="0" name="belowGradeFloors" value="0" />
+        </label>
+
+        <label>
+          Efetivo total
+          <input type="number" min="0" name="occupancy" value="0" />
+        </label>
+
+        <label>
+          Efetivo em locais de risco D ou E
+          <input type="number" min="0" name="riskDEOccupancy" value="0" />
+        </label>
+
+        <label>
+          Área bruta / área útil relevante (m²)
+          <input type="number" min="0" step="0.01" name="area" value="0" />
+        </label>
+
+        <label>
+          Densidade de carga de incêndio modificada (MJ/m²)
+          <input type="number" min="0" step="0.01" name="fireLoadDensity" value="0" />
+        </label>
+
+        <label>
+          Utilização exclusivamente de armazém (UT XI/XII)
+          <select name="warehouseOnly">
+            <option value="no">Não</option>
+            <option value="yes">Sim</option>
+          </select>
+        </label>
+
+        <label>
+          Existem locais de risco D ou E?
+          <select name="hasRiskDE">
+            <option value="no">Não</option>
+            <option value="yes">Sim</option>
+          </select>
+        </label>
+
+        <label>
+          Locais de risco D com saída independente direta ao exterior no plano de referência?
+          <select name="independentExitD">
+            <option value="no">Não</option>
+            <option value="yes">Sim</option>
+          </select>
+        </label>
+
+        <label>
+          Locais de risco E com saída independente direta ao exterior no plano de referência?
+          <select name="independentExitE">
+            <option value="no">Não</option>
+            <option value="yes">Sim</option>
+          </select>
+        </label>
+
+        <label>
+          Observações do caso
+          <textarea name="notes" rows="5" placeholder="Descreva a exploração, atividades, riscos específicos, horários, vulnerabilidades e limitações conhecidas."></textarea>
+        </label>
+
+        <div class="form-actions full">
+          <button type="submit" class="btn primary">Analisar e gerar dossiê</button>
+          <button type="button" class="btn" id="clearForm">Limpar</button>
+        </div>
+      </form>
+    </section>
+
+    <aside class="panel side">
+      <div class="panel-head">
+        <h2>Referencial legal</h2>
+      </div>
+      <ul class="legal-list">
+        <li><strong>Lei n.º 123/2019</strong> — fatores de risco, categorias e enquadramento das medidas de autoproteção.</li>
+        <li><strong>Portaria n.º 135/2020</strong> — conteúdo técnico das medidas, organização, formação, simulacros e planos.</li>
+        <li><strong>Despacho n.º 8954/2020</strong> — critérios de cálculo da densidade de carga de incêndio modificada para UT XI e XII.</li>
+      </ul>
+      <div class="note">
+        O dossiê inclui automaticamente: categoria de risco, fundamentação, medidas exigíveis, plano de prevenção,
+        procedimentos de emergência, plano de emergência interno quando aplicável, organização da segurança,
+        registos, formação, simulacros e lista de anexos técnicos a preparar.
+      </div>
+    </aside>
+  </main>
+
+  <section class="wrap panel result-panel" id="resultadoSec">
+    <div class="panel-head result-head">
+      <div>
+        <h2>Resultado</h2>
+        <p>Revise o relatório antes de exportar.</p>
+      </div>
+      <div class="result-actions">
+        <button type="button" class="btn primary" id="exportPdf">Exportar PDF</button>
+        <button type="button" class="btn" id="exportJson">Exportar JSON</button>
+      </div>
+    </div>
+
+    <article id="report" class="report">
+      <div class="placeholder">
+        Preencha o formulário e clique em <strong>“Analisar e gerar dossiê”</strong>.
+      </div>
+    </article>
+  </section>
+
+  <footer class="footer wrap">
+    <p>
+      Modelo base para GitHub Pages. Recomenda-se revisão técnica, integração de plantas reais em CAD/PDF e validação formal antes da submissão.
+    </p>
+  </footer>
+</body>
+</html>
